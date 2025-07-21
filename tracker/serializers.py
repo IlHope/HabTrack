@@ -10,6 +10,9 @@ class GoalSerializer(serializers.ModelSerializer):
     class Meta:
         model = Goal
         fields = '__all__'
+        extra_kwargs = {
+            'user': {'read_only': True}
+        }
 
 class HabitActionSerializer(serializers.ModelSerializer):
     class Meta:

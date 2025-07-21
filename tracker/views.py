@@ -2,6 +2,8 @@ from rest_framework import  viewsets
 from .models import Habit, Goal, HabitAction, GoalProgress
 from .serializers import HabitSerializer, GoalSerializer, HabitActionSerializer, GoalProgressSerializer
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.decorators import action
+from rest_framework.response import Response
 
 class HabitViewSet(viewsets.ModelViewSet):
     queryset = Habit.objects.all()
@@ -24,6 +26,20 @@ class GoalViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
+
+    @action(detail=True, methods=['get'])
+    def get_goal_progress(self, request, *args, **kwargs):
+        goal = self.get_object()
+        goal_progress = goal.progress.all().order_by("date")
+
+        cumulative = 0
+        result = {}
+
+        for progress in goal_progress:
+            cumulative += progress.increment
+            result[str(progress.date)] = cumulative
+
+        return Response(result)
 
 class HabitActionViewSet(viewsets.ModelViewSet):
     queryset = HabitAction.objects.all()
