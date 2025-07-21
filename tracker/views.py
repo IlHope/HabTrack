@@ -4,6 +4,7 @@ from .serializers import HabitSerializer, GoalSerializer, HabitActionSerializer,
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from datetime import date, timedelta
 
 class HabitViewSet(viewsets.ModelViewSet):
     queryset = Habit.objects.all()
@@ -15,6 +16,33 @@ class HabitViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
+
+    @action(detail=False, methods=['get'])
+    def reminders(self, request):
+        today = date.today()
+        habits = self.get_queryset().filter(is_active=True)
+        missed = []
+
+        for habit in habits:
+            last_action = habit.actions.order_by('-date').first()
+
+            if habit.periodicity == 'daily':
+                should_do = True
+
+            elif habit.periodicity == 'weekly':
+                should_do = (not last_action or (today - last_action.date).days >= 7)
+
+            elif habit.periodicity == 'monthly':
+                should_do = (not last_action or (today - last_action.date).days >= 30)
+
+            else:
+                should_do = False
+
+            if should_do and not habits.actions.filter(date=today).exists():
+                missed.append(habit)
+
+        serializer = self.get_serializer(missed, many=True)
+        return Response(serializer.data)
 
 class GoalViewSet(viewsets.ModelViewSet):
     queryset = Goal.objects.all()
