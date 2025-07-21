@@ -38,7 +38,7 @@ class HabitActionViewSet(viewsets.ModelViewSet):
 
 class GoalProgressViewSet(viewsets.ModelViewSet):
     queryset = GoalProgress.objects.all()
-    serializer_class = GoalSerializer
+    serializer_class = GoalProgressSerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
