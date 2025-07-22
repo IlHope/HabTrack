@@ -44,6 +44,13 @@ class HabitViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(missed, many=True)
         return Response(serializer.data)
 
+    @action(detail=True, methods=['get'])
+    def calendar(self, request):
+        habit = self.get_object()
+        dates = habit.actions.values_list('date', flat=True).order_by('date')
+
+        return Response(dates)
+
 class GoalViewSet(viewsets.ModelViewSet):
     queryset = Goal.objects.all()
     serializer_class = GoalSerializer
